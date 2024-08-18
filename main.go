@@ -77,5 +77,10 @@ func genCommands() map[string]cliCommand {
 			description: "Edit an issue. Must pass a repo name, issue id, and the field to edit which can be 'title', 'body' or 'labels'.",
 			callback:    commandUpdate,
 		},
+		"close": {
+			command:     "close",
+			description: "Close an issue. Must pass a repo name and issue id.",
+			callback:    commandClose,
+		},
 	}
 }

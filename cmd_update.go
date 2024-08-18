@@ -19,7 +19,11 @@ func commandUpdate(c *config, params []string) error {
 		return err
 	}
 
-	updateParams := github.IssueBody{}
+	updateParams := github.IssueBody{
+		Title:  issue.Title,
+		Body:   issue.Body,
+		Labels: github.LabelsRespToBody(issue.Labels),
+	}
 	field := params[2]
 	reader := bufio.NewScanner(os.Stdin)
 
@@ -28,11 +32,11 @@ func commandUpdate(c *config, params []string) error {
 		fmt.Printf("Current title: %s\n", issue.Title)
 		fmt.Print("Enter a new title: ")
 		reader.Scan()
-		title := reader.Text()
-		if len(title) == 0 {
+		input := reader.Text()
+		if len(input) == 0 {
 			return errors.New("an issue requires a title")
 		}
-		updateParams.Title = title
+		updateParams.Title = input
 	case "body":
 		fmt.Println("Press ENTER to edit the body in your preferred text editor...")
 		reader.Scan()
@@ -41,32 +45,24 @@ func commandUpdate(c *config, params []string) error {
 			return err
 		}
 		updateParams.Body = string(body)
+	case "labels":
+		fmt.Printf("Current labels: %s\n", github.LabelsRespToBody(issue.Labels))
+		fmt.Print("Replace current labels, as a comma-separated list (leave empty to remove all labels): ")
+		reader.Scan()
+		input := reader.Text()
+		updateParams.Labels = github.LabelsBufferToBody(input)
+	default:
+		return errors.New("you can only update the title, body and labels fields")
 	}
 
-	// fmt.Print("Add some labels (as a comma-separated list): ")
-	// reader.Scan()
-	// labels := reader.Text()
+	response, err := c.client.UpdateIssue(params[0], params[1], &updateParams)
+	if err != nil {
+		return err
+	}
 
-	// labelList := []string{}
-	// if len(labels) > 0 {
-	// 	labelSlice := strings.Split(labels, ",")
-	// 	for _, label := range labelSlice {
-	// 		labelList = append(labelList, strings.Trim(label, " "))
-	// 	}
-	// }
-
-	// bodyParams := github.IssueBody{
-	// 	Title:  title,
-	// 	Body:   string(body),
-	// 	Labels: labelList,
-	// }
-
-	// response, err := c.client.CreateIssue(params[0], &bodyParams)
-	// if err != nil {
-	// 	return err
-	// }
-
-	fmt.Printf("Test: %v\n", updateParams)
+	fmt.Println()
+	fmt.Println("Issue has been succesfully updated!")
+	fmt.Printf("You can view the changes here: %s\n", response.HTMLUrl)
 
 	return nil
 }

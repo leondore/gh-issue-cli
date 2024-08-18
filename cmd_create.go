@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"exercise-4.11/github"
 )
@@ -36,18 +35,10 @@ func commandCreate(c *config, params []string) error {
 	reader.Scan()
 	labels := reader.Text()
 
-	labelList := []string{}
-	if len(labels) > 0 {
-		labelSlice := strings.Split(labels, ",")
-		for _, label := range labelSlice {
-			labelList = append(labelList, strings.Trim(label, " "))
-		}
-	}
-
 	bodyParams := github.IssueBody{
 		Title:  title,
 		Body:   string(body),
-		Labels: labelList,
+		Labels: github.LabelsBufferToBody(labels),
 	}
 
 	response, err := c.client.CreateIssue(params[0], &bodyParams)
